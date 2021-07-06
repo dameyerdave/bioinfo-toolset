@@ -19,7 +19,7 @@ def cli():
 @click.argument('chromosome', type=int)
 @click.argument('position', type=int)
 def liftover(_from, to, chromosome, position):
-    from bioinfo_toolset.liftover import liftover
+    from bioinfo_toolset.modules.liftover import liftover
     try:
         t_chr, t_pos = liftover(_from, to, chromosome, position)
         source_str = "%2s:%-10s" % (chromosome, position)
@@ -41,8 +41,8 @@ cli.add_command(liftover)
 @click.option('--input-type', '-t', 'input_type', default='hgvs', type=Choice(['hgvs', 'id', 'region']), help='The input type you want to query')
 @click.argument('input', type=str)
 def vep(species, input_type, input, GRCh37, liftover):
-    from bioinfo_toolset.vep import vep
-    from bioinfo_toolset.liftover import liftover
+    from bioinfo_toolset.modules.vep import vep
+    from bioinfo_toolset.modules.liftover import liftover
 
     def output(text, indent=0):
         print(f'%-{indent * 4}s{text}' % (' '))
@@ -51,6 +51,8 @@ def vep(species, input_type, input, GRCh37, liftover):
         attrs = []
         if highlight:
             attrs = ['bold']
+        if isinstance(value, list):
+            value = ', '.join(value)
         print(f'%-{indent * 4}s%-{34 if highlight else 30}s : %s' %
               (' ', colored(id, 'cyan', attrs=attrs), colored(value, 'white', attrs=attrs)))
 
@@ -62,7 +64,15 @@ def vep(species, input_type, input, GRCh37, liftover):
         output('---', indent)
 
     def output_variant(variant, indent=0):
-        for id in ['assembly_name', 'id', 'seq_region_name', 'start', 'end', 'allele_string', 'strand', 'somatic', 'most_severe_consequence']:
+        for id in ['assembly_name',
+                   'id',
+                   'seq_region_name',
+                   'start',
+                   'end',
+                   'allele_string',
+                   'strand',
+                   'somatic',
+                   'most_severe_consequence']:
             output_item(variant, id, indent)
 
     def output_transcript(transcript, indent=0):
@@ -70,8 +80,25 @@ def vep(species, input_type, input, GRCh37, liftover):
         if 'canonical' in transcript and transcript['canonical'] == 1:
             highlight = True
 
-        for id in ['transcript_id', 'gene_symbol', 'gene_id', 'hgnc_id', 'amino_acids', 'protein_start' 'impact', 'consequence_terms']:
+        for id in [
+            'transcript_id',
+            'gene_symbol',
+            'gene_id',
+            'variant_allele',
+            'hgnc_id',
+            'amino_acids',
+            'impact',
+            'consequence_terms',
+            'codons',
+            'biotype',
+            'polyphen_score',
+            'strand',
+                'sift_score']:
             output_item(transcript, id, indent, highlight)
+        output_kv('cds_position', format_position(
+            transcript, 'cds'), indent, highlight)
+        output_kv('cdna_position', format_position(
+            transcript, 'cdna'), indent, highlight)
         output_kv('protein_position', format_protein_position(
             transcript), indent, highlight)
         output_kv('transcript_name', transcript_name(
@@ -83,6 +110,15 @@ def vep(species, input_type, input, GRCh37, liftover):
     def format_protein_position(transcript):
         if 'protein_start' in transcript and 'protein_end' in transcript:
             return '%s-%s' % (transcript['protein_start'], transcript['protein_end']) if transcript['protein_start'] != transcript['protein_end'] else transcript['protein_start']
+        else:
+            return 'N/A'
+
+    def format_position(transcript, prefix):
+        if prefix+'_start' in transcript and prefix+'_end' in transcript:
+            if transcript[prefix+'_start'] == transcript[prefix+'_end']:
+                return "%s" % (transcript[prefix+'_start'])
+            else:
+                return "%s-%s" % (transcript[prefix+'_start'], transcript[prefix+'_end'])
         else:
             return 'N/A'
 
