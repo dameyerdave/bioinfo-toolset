@@ -12,6 +12,8 @@ setuptools = "*"
 wheel = "*"
 tqdm = "*"
 twine = "*"
+hgvs = "*"
+docker = "*"
 
 [dev-packages]
 flake8 = "*"
