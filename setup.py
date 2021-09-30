@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='bioinfo_toolset',
-    version=0.7,
+    version=0.9,
     author='David Meyer',
     author_email='dameyerdave@gmail.com',
     description='Python Rules Evaluator',
