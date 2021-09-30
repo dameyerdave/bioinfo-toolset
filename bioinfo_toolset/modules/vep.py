@@ -12,7 +12,8 @@ def vep(input, species='human', input_type='hgvs', GRCh37=False, refseq=False):
         'hgvs': True,
         'SpliceRegion': True,
         'ccds': True,
-        'tls': True
+        'tls': True,
+        'xref_refseq': True
     }
     if refseq:
         params['refseq'] = True

@@ -71,6 +71,21 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
             attrs = ['bold']
         if isinstance(value, list):
             value = ', '.join(value)
+        if isinstance(value, dict):
+            new_value = ''
+            for key, val in value.items():
+                if new_value != '':
+                    new_value += f"\n{' ' * (indent * 4 + 24)}"
+                new_value += f"{key}: "
+                if isinstance(val, list):
+                    new_value += ', '.join([str(v) for v in val])
+                elif isinstance(val, dict):
+                    for k, v in val.items():
+                        new_value += f"\n{' ' * (indent * 4 + 30)}"
+                        new_value += f'{k}: {v}'
+                else:
+                    new_value += str(val)
+            value = new_value
         print(f'%-{indent * 4}s%-{34 if highlight else 30}s : %s' %
               (' ', colored(id, 'cyan', attrs=attrs), colored(value, 'white', attrs=attrs)))
 
@@ -87,12 +102,16 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
                    'seq_region_name',
                    'start',
                    'end',
+                   'variant_class',
                    'allele_string',
                    'strand',
                    'somatic',
                    'most_severe_consequence',
                    'clin_sig',
-                   'frequencies']:
+                   'frequencies',
+                   'phenotype_or_disease',
+                   'var_synonyms'
+                   ]:
             output_item(variant, id, indent)
 
     def output_transcript(transcript, indent=0):
@@ -116,7 +135,10 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
             'biotype',
             'polyphen_score',
             'strand',
-                'sift_score']:
+            'sift_score',
+            'sift_prediction',
+            'flags'
+        ]:
             output_item(transcript, id, indent, highlight)
         output_kv('cds_position', format_position(
             transcript, 'cds'), indent, highlight)
