@@ -88,7 +88,7 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
                 else:
                     new_value += str(val)
             value = new_value
-        print(f'%-{indent * 4}s%-{34 if highlight else 30}s : %s' %
+        print(f'%-{indent * 4}s%-{36 if highlight else 32}s : %s' %
               (' ', colored(id, 'cyan', attrs=attrs), colored(value, 'white', attrs=attrs)))
 
     def output_item(_dict, id, indent=0, highlight=False):
