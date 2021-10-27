@@ -14,6 +14,8 @@ tqdm = "*"
 twine = "*"
 hgvs = "*"
 docker = "*"
+"ga4gh.vrs" = {extras = ["extras"], version = "*"}
+jsonschema = "<4.0"
 
 [dev-packages]
 flake8 = "*"

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from bioinfo_toolset.modules.vep_offline import OfflineVep
 import traceback
 from pprint import pprint
 from sys import stdout
@@ -9,6 +8,8 @@ import click
 from click import Choice
 from friendlylog import colored_logger as log
 from termcolor import colored
+
+from bioinfo_toolset.modules.vep_offline import OfflineVep
 
 
 @click.group()
@@ -57,8 +58,9 @@ cli.add_command(hgvs)
 @click.option('--enrich-transcripts', '-e', 'enrich_transcripts', is_flag=True, help='Enrich the transcripts (takes longer)')
 @click.option('--all-transcripts', '-a', 'all_transcripts', is_flag=True, help='Only show canonical transcript(s)')
 @click.option('--refseq-mode', '-r', 'refsec_mode', is_flag=True, help='Use RefSeq transcript set to report consequences')
+@click.option('--vrs', '-v', 'vrs', is_flag=True, help='Calculates and outputs the VRS identifier per transcript')
 @click.argument('input', type=str)
-def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_transcripts, refsec_mode):
+def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_transcripts, refsec_mode, vrs):
     from bioinfo_toolset.modules.vep import vep
     from bioinfo_toolset.modules.liftover import liftover
 
@@ -110,7 +112,8 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
                    'clin_sig',
                    'frequencies',
                    'phenotype_or_disease',
-                   'var_synonyms'
+                   'var_synonyms',
+                   'vrs'
                    ]:
             output_item(variant, id, indent)
 
@@ -181,6 +184,14 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
         else:
             return 'N/A'
 
+    def calculate_vrs(variant):
+        from bioinfo_toolset.modules.vrs import VRS
+        _vrs = VRS.get_instance()
+        variant['vrs'] = _vrs.identify(
+            sequence_id=f"{variant['assembly_name']}:{variant['seq_region_name']}", allele=variant['allele_string'].split('/')[1], start=variant['start'], end=variant['end'])
+
+        return variant
+
     def enrich_transcript(transcript, species=species, GRCh37=GRCh37):
         if 'hgvsc' in transcript:
             from bioinfo_toolset.modules.variant_recoder import recode
@@ -217,6 +228,8 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
                           input_type=input_type, GRCh37=GRCh37, refseq=refsec_mode)
 
         for result in results:
+            if vrs:
+                result = calculate_vrs(result)
             print(
                 colored(f"Result for {result['input']}", 'blue', attrs={'bold'}))
             print(
