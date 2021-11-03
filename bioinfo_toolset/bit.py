@@ -59,8 +59,9 @@ cli.add_command(hgvs)
 @click.option('--all-transcripts', '-a', 'all_transcripts', is_flag=True, help='Only show canonical transcript(s)')
 @click.option('--refseq-mode', '-r', 'refsec_mode', is_flag=True, help='Use RefSeq transcript set to report consequences')
 @click.option('--vrs', '-v', 'vrs', is_flag=True, help='Calculates and outputs the VRS identifier per transcript')
+@click.option('--details', '-d', 'details', is_flag=True, help='Outputs all values of variant and transcript got from VEP.')
 @click.argument('input', type=str)
-def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_transcripts, refsec_mode, vrs):
+def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_transcripts, refsec_mode, vrs, details):
     from bioinfo_toolset.modules.vep import vep
     from bioinfo_toolset.modules.liftover import liftover
 
@@ -72,7 +73,10 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
         if highlight:
             attrs = ['bold']
         if isinstance(value, list):
-            value = ', '.join(value)
+            if isinstance(value[0], str):
+                value = ', '.join(value)
+            elif isinstance(value[0], dict):
+                value = ', '.join([str(val) for val in value])
         if isinstance(value, dict):
             new_value = ''
             for key, val in value.items():
@@ -98,50 +102,60 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
     def output_splitter(indent=0):
         output('---', indent)
 
-    def output_variant(variant, indent=0):
-        for id in ['assembly_name',
-                   'id',
-                   'seq_region_name',
-                   'start',
-                   'end',
-                   'variant_class',
-                   'allele_string',
-                   'strand',
-                   'somatic',
-                   'most_severe_consequence',
-                   'clin_sig',
-                   'frequencies',
-                   'phenotype_or_disease',
-                   'var_synonyms',
-                   'vrs'
-                   ]:
+    def output_variant(variant, indent=0, details=details):
+        if details:
+            output_values = list(variant.keys())
+            output_values.remove('transcript_consequences')
+        else:
+            output_values = ['assembly_name',
+                             'id',
+                             'seq_region_name',
+                             'start',
+                             'end',
+                             'variant_class',
+                             'allele_string',
+                             'strand',
+                             'somatic',
+                             'most_severe_consequence',
+                             'clin_sig',
+                             'frequencies',
+                             'phenotype_or_disease',
+                             'var_synonyms',
+                             'vrs'
+                             ]
+        for id in output_values:
             output_item(variant, id, indent)
 
-    def output_transcript(transcript, indent=0):
+    def output_transcript(transcript, indent=0, details=details):
         highlight = False
         if 'canonical' in transcript and transcript['canonical'] == 1:
             highlight = True
 
-        for id in [
-            'transcript_id',
-            'gene_symbol',
-            'gene_id',
-            'variant_allele',
-            'hgvsg',
-            'hgvsc',
-            'hgvsp',
-            'hgnc_id',
-            'amino_acids',
-            'impact',
-            'consequence_terms',
-            'codons',
-            'biotype',
-            'polyphen_score',
-            'strand',
-            'sift_score',
-            'sift_prediction',
-            'flags'
-        ]:
+        if details:
+            output_values = transcript.keys()
+        else:
+            output_values = [
+                'transcript_id',
+                'gene_symbol',
+                'gene_id',
+                'variant_allele',
+                'hgvsg',
+                'hgvsc',
+                'hgvsp',
+                'hgnc_id',
+                'amino_acids',
+                'impact',
+                'consequence_terms',
+                'codons',
+                'biotype',
+                'polyphen_score',
+                'strand',
+                'sift_score',
+                'sift_prediction',
+                'flags'
+            ]
+
+        for id in output_values:
             output_item(transcript, id, indent, highlight)
         output_kv('cds_position', format_position(
             transcript, 'cds'), indent, highlight)
