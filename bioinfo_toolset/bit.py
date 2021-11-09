@@ -105,7 +105,8 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
     def output_variant(variant, indent=0, details=details):
         if details:
             output_values = list(variant.keys())
-            output_values.remove('transcript_consequences')
+            if 'transcript_consequences' in output_values:
+                output_values.remove('transcript_consequences')
         else:
             output_values = ['assembly_name',
                              'id',
