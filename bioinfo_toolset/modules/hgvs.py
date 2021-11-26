@@ -50,7 +50,7 @@ class Hgvs:
                 cls.__refseq_g_accession(hgvs_str))
 
             print('--ret--')
-            pprint(ret)
+            print(ret)
 
             print('--posedit--')
             pprint(ret.posedit)

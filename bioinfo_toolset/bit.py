@@ -168,7 +168,10 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
             transcript), indent, highlight)
 
     def format_allele_string(allele_string):
-        return "%s > %s" % tuple(allele_string.split('/'))
+        if '/' in allele_string:
+            return "%s > %s" % tuple(allele_string.split('/'))
+        else:
+            return allele_string
 
     def format_protein_position(transcript):
         if 'protein_start' in transcript and 'protein_end' in transcript:
