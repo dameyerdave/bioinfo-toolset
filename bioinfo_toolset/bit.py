@@ -10,7 +10,9 @@ from friendlylog import colored_logger as log
 from termcolor import colored
 
 from bioinfo_toolset.modules.vep_offline import OfflineVep
+import logging
 
+log.setLevel(logging.INFO)
 
 @click.group()
 def cli():
