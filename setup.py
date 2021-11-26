@@ -5,7 +5,7 @@ with open('README.md', 'r') as fh:
 
 setuptools.setup(
     name='bioinfo_toolset',
-    version=1.1,
+    version=1.3,
     author='David Meyer',
     author_email='dameyerdave@gmail.com',
     description='Python Rules Evaluator',
@@ -23,7 +23,12 @@ setuptools.setup(
         'liftover',
         'click',
         'friendlylog',
-        'termcolor'
+        'termcolor',
+        'tqdm',
+        'hgvs',
+        'jsonschema',
+        'docker',
+        'ga4gh.vrs[extras]'
     ],
     entry_points={
         'console_scripts': {

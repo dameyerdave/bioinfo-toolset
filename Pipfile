@@ -8,18 +8,18 @@ liftover = "*"
 click = "*"
 friendlylog = "*"
 termcolor = "*"
-setuptools = "*"
-wheel = "*"
 tqdm = "*"
-twine = "*"
 hgvs = "*"
 docker = "*"
-"ga4gh.vrs" = {extras = ["extras"], version = "*"}
 jsonschema = "<4.0"
+"ga4gh.vrs" = {extras = ["extras"], version = "*"}
 
 [dev-packages]
 flake8 = "*"
 autopep8 = "*"
+setuptools = "*"
+wheel = "*"
+twine = "*"
 
 [requires]
 python_version = "3.9"
