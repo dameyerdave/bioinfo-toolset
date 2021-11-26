@@ -136,6 +136,7 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
             output_values = transcript.keys()
         else:
             output_values = [
+                'source',
                 'transcript_id',
                 'gene_symbol',
                 'gene_id',
