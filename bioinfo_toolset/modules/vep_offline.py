@@ -136,7 +136,7 @@ class OfflineVep():
         with open(input_file, 'w') as inf:
             tab = '\t'
             for line in input:
-                print('--line--', f"{re.sub(r'[ ]+', tab, line)}\n")
+                # print('--line--', f"{re.sub(r'[ ]+', tab, line)}\n")
                 inf.write(f"{re.sub(r'[ ]+', tab, line)}\n")
         (_, output_file) = mkstemp(suffix='.json', dir=VEP_DATA)
         vep_args = {
