@@ -28,7 +28,8 @@ setuptools.setup(
         'hgvs',
         'jsonschema',
         'docker',
-        'ga4gh.vrs[extras]'
+        'ga4gh.vrs[extras]',
+        'biopython'
     ],
     entry_points={
         'console_scripts': {

@@ -13,6 +13,7 @@ hgvs = "*"
 docker = "*"
 jsonschema = "<4.0"
 "ga4gh.vrs" = {extras = ["extras"], version = "*"}
+biopython = "*"
 
 [dev-packages]
 flake8 = "*"
