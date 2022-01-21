@@ -12,7 +12,10 @@ from termcolor import colored
 from bioinfo_toolset.modules.vep_offline import OfflineVep
 import logging
 
-log.setLevel(logging.INFO)
+from bioinfo_toolset.modules.vrs import VRS
+
+log.setLevel(logging.DEBUG)
+
 
 @click.group()
 def cli():
@@ -50,6 +53,24 @@ def hgvs(hgvs_string, _parse):
 
 
 cli.add_command(hgvs)
+
+
+@click.command()
+@click.option('--GRCh37', '--grch37', '--old', '-o', 'GRCh37', is_flag=True, help="Use the GRCh rest api for the query")
+@click.argument('chromosome', type=int)
+@click.argument('start', type=int)
+@click.argument('end', type=int, required=False, default=None)
+def position(chromosome: int, start: int, end: int = None, GRCh37: bool = False):
+    # We need to correct the postion by moving it one back
+    start -= 1
+    if end is None:
+        end = start + 1
+    vrs = VRS()
+    print(vrs.allele_at_position(
+        'GRCh37' if GRCh37 else 'GRCh38', chromosome, start, end))
+
+
+cli.add_command(position)
 
 
 @click.command(context_settings={"ignore_unknown_options": True}, help="The query string can be a hgvs, id or region (e.g. hgvs: 9:g.22125504G>C, region: 3:178928079/C)")

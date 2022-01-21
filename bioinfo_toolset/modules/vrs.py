@@ -1,11 +1,13 @@
 # pipenv install "jsonschema<4.0" is required
 # from bioinfo_toolset.modules.helper import dj
 import docker
+from bioutils import sequences
+from bioutils.seqfetcher import fetch_seq
 from ga4gh.core import ga4gh_identify
 from ga4gh.vrs import models
 from ga4gh.vrs.dataproxy import SeqRepoRESTDataProxy
 
-SEQREPO_PORT = 5051
+SEQREPO_PORT = 5055
 SEQREPO_IMAGE = 'biocommons/seqrepo-rest-service'
 SEQREPO_DATA = '/usr/local/share/seqrepo/'
 SEQREPO_REST_SERVICE_URL = f"http://localhost:{SEQREPO_PORT}/seqrepo"
@@ -76,3 +78,8 @@ class VRS():
                 f"Cannot query local seqrepo server. Check if the container 'seqrepo_local' is running: {ex}")
 
         return ga4gh_identify(_allele)
+
+    def allele_at_position(self, assembly: str, chromosome: int, start: int, end: int):
+        allele = self.seqrepo.get_sequence(
+            identifier=f"{assembly}:{chromosome}", start=start, end=end)
+        return allele
