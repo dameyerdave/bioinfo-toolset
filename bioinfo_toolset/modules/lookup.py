@@ -1,4 +1,4 @@
-complement_allele = {
+complement_allele_lookup = {
     'A': 'T',
     'C': 'G',
     'G': 'C',
