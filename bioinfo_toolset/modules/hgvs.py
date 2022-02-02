@@ -81,7 +81,7 @@ class Hgvs:
                             f"Found complementary case: {chromosome}:{position} {ref}>{alt} {transcript_change}")
                     else:
                         log.error(
-                            f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {dna_change}")
+                            f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
                     return cls.parse(f"{chromosome}:g.{position}{ref}>{alt}")
                 elif 'type' in transcript_change_info.re.groupindex:
                     # we found a insertion, deletion...
