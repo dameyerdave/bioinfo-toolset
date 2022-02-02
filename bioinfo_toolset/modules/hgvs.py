@@ -4,8 +4,8 @@ from pprint import pprint
 from hgvs.edit import Dup, Inv, NARefAlt
 from hgvs.parser import Parser
 
-from modules.vrs import VRS
-from modules.lookup import complement_allele_lookup
+from bioinfo_toolset.modules.vrs import VRS
+from bioinfo_toolset.modules.lookup import complement_allele_lookup
 
 from friendlylog import colored_logger as log
 
