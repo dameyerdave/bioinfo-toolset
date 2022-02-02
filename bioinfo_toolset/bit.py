@@ -45,11 +45,17 @@ cli.add_command(liftover)
 
 @click.command()
 @click.option('--parse', '-p', '_parse', is_flag=True, help='Parse the hgvs string')
+@click.option('--transcript', '-t', '_transcript', is_flag=True, help='Parse a variant using transcript level change [chr:pos:hgvs]')
+@click.option('--GRCh37', '--grch37', '--old', '-o', 'GRCh37', is_flag=True, help="Use the GRCh rest api for the query")
 @click.argument('hgvs_string', type=str)
-def hgvs(hgvs_string, _parse):
+def hgvs(hgvs_string: str, _parse: bool = True, _transcript: bool = False, GRCh37: bool = False):
     from bioinfo_toolset.modules.hgvs import Hgvs
     if _parse:
         pprint(Hgvs.parse(hgvs_string))
+    elif _transcript:
+        chromosome, position, transcript_change = hgvs_string.split(':')
+        pprint(Hgvs.from_transcript_change(
+            chromosome, int(position), transcript_change, GRCh37))
 
 
 cli.add_command(hgvs)

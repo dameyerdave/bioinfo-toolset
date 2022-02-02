@@ -4,7 +4,10 @@ from pprint import pprint
 from hgvs.edit import Dup, Inv, NARefAlt
 from hgvs.parser import Parser
 
-RE_HGVS_G = r'[1-9]{1,2}:g\.(=|_|con|copy|del|dup|ins|inv|[0-9])'
+from modules.vrs import VRS
+from modules.lookup import complement_allele_lookup
+
+from friendlylog import colored_logger as log
 
 # maps between chromosomes and refseq chromosome-level accessions
 AC_MAP = {
@@ -35,18 +38,82 @@ AC_MAP = {
     'Y': 'NC_000024.9',
 }
 
+RE_HGVS_G = r'([1-9]{1,2}|[XY]{1}):g\.(=|_|con|copy|del|dup|ins|inv|[0-9])'
+RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)'
+RE_TRANS_C = [
+    r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
+    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins))(?P<to_allele>[ACTG]+)',
+    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(del|dup|inv))(?P<appendix>.*)'
+]
+
 
 class Hgvs:
+    hgvsparser = Parser()
+    vrs = VRS()
+
     @staticmethod
     def __refseq_g_accession(hgvs_g_str):
         chromosome, rest = hgvs_g_str.split(":")
         return "%s:%s" % (AC_MAP[str(chromosome)], rest)
 
     @classmethod
+    def from_transcript_change(cls, chromosome: str, position: int, transcript_change: str, GRCh37: bool = False):
+        for rex in RE_TRANS_C:
+            if re.match(rex, transcript_change):
+                transcript_change_info = re.search(rex, transcript_change)
+                if 'from_allele' in transcript_change_info.re.groupindex:
+                    # we found a change nomenclature
+                    reference_allele = cls.vrs.allele_at_position(
+                        'GRCh37' if GRCh37 else 'GRCh38', chromosome, position - 1, position - 1 + len(transcript_change_info.group('from_allele')))
+                    complement_allele = complement_allele_lookup(
+                        reference_allele)
+                    if transcript_change_info.group('from_allele') == reference_allele:
+                        ref = reference_allele
+                        alt = transcript_change_info.group(
+                            'to_allele')
+                    # Sanity check it should then be the to_allele
+                    if transcript_change_info.group('from_allele') == complement_allele:
+                        # we need to invert the values (because its on the backwards strand)
+                        ref = complement_allele
+                        alt = complement_allele_lookup(transcript_change_info.group(
+                            'to_allele'))
+                        log.debug(
+                            f"Found complementary case: {chromosome}:{position} {ref}>{alt} {transcript_change}")
+                    else:
+                        log.error(
+                            f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {dna_change}")
+                    return cls.parse(f"{chromosome}:g.{position}{ref}>{alt}")
+                elif 'type' in transcript_change_info.re.groupindex:
+                    # we found a insertion, deletion...
+                    if '_' in transcript_change_info.group('position'):
+                        start, end = list(map(lambda p: int(p), transcript_change_info.group(
+                            'position').split('_')))
+                        position_part = f"{position}_{position + end - start}"
+                    else:
+                        position_part = position
+                    if transcript_change_info.group('type') in ['ins', 'delins']:
+                        return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
+                    elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
+                        return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
+        return None
+
+    @classmethod
+    def parse_c(cls, hgvs_str):
+        """Parses a hgvs c string. A hgvs string at the transcript level."""
+        # if re.match(RE_HGVS_C, hgvs_str):
+        #     cls.hgvsparser.parse_hgvs_variant()
+        raise NotImplementedError()
+
+    @classmethod
+    def parse_g(cls, hgvs_str):
+        """Same as parse()"""
+        return cls.parse(hgvs_str)
+
+    @classmethod
     def parse(cls, hgvs_str):
+        """Parses a hgvs g string. A hgvs string at the gene level."""
         if re.match(RE_HGVS_G, hgvs_str):
-            hgvsparser = Parser()
-            ret = hgvsparser.parse_g_variant(
+            ret = cls.hgvsparser.parse_g_variant(
                 cls.__refseq_g_accession(hgvs_str))
 
             print('--ret--')
@@ -67,7 +134,8 @@ class Hgvs:
                     'start': ret.posedit.pos.start.base,
                     'end': ret.posedit.pos.end.base,
                     'ref': ret.posedit.edit.ref,
-                    'alt': ret.posedit.edit.alt
+                    'alt': ret.posedit.edit.alt,
+                    'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}"
                 }
             elif isinstance(ret.posedit.edit, Dup):
                 return {
@@ -75,7 +143,8 @@ class Hgvs:
                     'start': ret.posedit.pos.start.base,
                     'end': ret.posedit.pos.end.base,
                     'ref': ret.posedit.edit.ref,
-                    'alt': None
+                    'alt': None,
+                    'region': 'TODO'
                 }
             elif isinstance(ret.posedit.edit, Inv):
                 return {
@@ -83,5 +152,8 @@ class Hgvs:
                     'start': ret.posedit.pos.start.base,
                     'end': ret.posedit.pos.end.base,
                     'ref': None,
-                    'alt': None
+                    'alt': None,
+                    'region': 'TODO'
                 }
+        # In cases we do not find a match we return None
+        return None
