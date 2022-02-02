@@ -116,17 +116,17 @@ class Hgvs:
             ret = cls.hgvsparser.parse_g_variant(
                 cls.__refseq_g_accession(hgvs_str))
 
-            print('--ret--')
-            print(ret)
+            # print('--ret--')
+            # print(ret)
 
-            print('--posedit--')
-            pprint(ret.posedit)
+            # print('--posedit--')
+            # pprint(ret.posedit)
 
-            print('--pos--')
-            pprint(ret.posedit.pos)
+            # print('--pos--')
+            # pprint(ret.posedit.pos)
 
-            print(f'--edit ({type(ret.posedit.edit)})--')
-            pprint(ret.posedit.edit)
+            # print(f'--edit ({type(ret.posedit.edit)})--')
+            # pprint(ret.posedit.edit)
 
             if isinstance(ret.posedit.edit, NARefAlt):
                 return {
