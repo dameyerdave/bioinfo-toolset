@@ -78,7 +78,7 @@ class Hgvs:
                         alt = transcript_change_info.group(
                             'to_allele')
                     # Sanity check it should then be the to_allele
-                    if transcript_change_info.group('from_allele') == complement_allele:
+                    elif transcript_change_info.group('from_allele') == complement_allele:
                         # we need to invert the values (because its on the backwards strand)
                         alt = complement_allele_lookup(transcript_change_info.group(
                             'to_allele'))
