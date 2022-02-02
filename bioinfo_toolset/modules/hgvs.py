@@ -61,36 +61,34 @@ class Hgvs:
         for rex in RE_TRANS_C:
             if re.match(rex, transcript_change):
                 transcript_change_info = re.search(rex, transcript_change)
+                if '_' in transcript_change_info.group('position'):
+                    start, end = list(map(lambda p: int(p), transcript_change_info.group(
+                        'position').split('_')))
+                    position_part = f"{position}_{position + end - start}"
+                else:
+                    position_part = position
                 if 'from_allele' in transcript_change_info.re.groupindex:
                     # we found a change nomenclature
                     reference_allele = cls.vrs.allele_at_position(
                         'GRCh37' if GRCh37 else 'GRCh38', chromosome, position - 1, position - 1 + len(transcript_change_info.group('from_allele')))
                     complement_allele = complement_allele_lookup(
                         reference_allele)
+                    ref = reference_allele
                     if transcript_change_info.group('from_allele') == reference_allele:
-                        ref = reference_allele
                         alt = transcript_change_info.group(
                             'to_allele')
                     # Sanity check it should then be the to_allele
                     if transcript_change_info.group('from_allele') == complement_allele:
                         # we need to invert the values (because its on the backwards strand)
-                        ref = complement_allele
                         alt = complement_allele_lookup(transcript_change_info.group(
                             'to_allele'))
-                        log.debug(
-                            f"Found complementary case: {chromosome}:{position} {ref}>{alt} {transcript_change}")
                     else:
                         log.error(
                             f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
-                    return cls.parse(f"{chromosome}:g.{position}{ref}>{alt}")
+
+                    return cls.parse(f"{chromosome}:g.{position_part}{ref}>{alt}")
                 elif 'type' in transcript_change_info.re.groupindex:
                     # we found a insertion, deletion...
-                    if '_' in transcript_change_info.group('position'):
-                        start, end = list(map(lambda p: int(p), transcript_change_info.group(
-                            'position').split('_')))
-                        position_part = f"{position}_{position + end - start}"
-                    else:
-                        position_part = position
                     if transcript_change_info.group('type') in ['ins', 'delins']:
                         return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
                     elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
@@ -113,47 +111,53 @@ class Hgvs:
     def parse(cls, hgvs_str):
         """Parses a hgvs g string. A hgvs string at the gene level."""
         if re.match(RE_HGVS_G, hgvs_str):
-            ret = cls.hgvsparser.parse_g_variant(
-                cls.__refseq_g_accession(hgvs_str))
+            try:
+                ret = cls.hgvsparser.parse(
+                    cls.__refseq_g_accession(hgvs_str))
 
-            # print('--ret--')
-            # print(ret)
-
-            # print('--posedit--')
-            # pprint(ret.posedit)
-
-            # print('--pos--')
-            # pprint(ret.posedit.pos)
-
-            # print(f'--edit ({type(ret.posedit.edit)})--')
-            # pprint(ret.posedit.edit)
-
-            if isinstance(ret.posedit.edit, NARefAlt):
+                if isinstance(ret.posedit.edit, NARefAlt):
+                    return {
+                        'chromosome': hgvs_str.split(':')[0],
+                        'start': ret.posedit.pos.start.base,
+                        'end': ret.posedit.pos.end.base,
+                        'ref': ret.posedit.edit.ref,
+                        'alt': ret.posedit.edit.alt,
+                        'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}"
+                    }
+                elif isinstance(ret.posedit.edit, Dup):
+                    return {
+                        'chromosome': hgvs_str.split(':')[0],
+                        'start': ret.posedit.pos.start.base,
+                        'end': ret.posedit.pos.end.base,
+                        'ref': ret.posedit.edit.ref,
+                        'alt': None,
+                        'region': 'TODO'
+                    }
+                elif isinstance(ret.posedit.edit, Inv):
+                    return {
+                        'chromosome': hgvs_str.split(':')[0],
+                        'start': ret.posedit.pos.start.base,
+                        'end': ret.posedit.pos.end.base,
+                        'ref': None,
+                        'alt': None,
+                        'region': 'TODO'
+                    }
+            except Exception as ex:
+                log.warning(ex)
+                chr, rest = hgvs_str.split(':')
+                rest = re.sub(r'g\.', '', rest)
+                info = re.search(
+                    r'(?P<position>[0-9_]+)(?P<ref>[ACGT]+)>(?P<alt>[ACGT]+)', rest)
+                if '_' in info.group('position'):
+                    start, end = info.group('position').split('_')
+                else:
+                    start = end = info.group('position')
                 return {
-                    'chromosome': hgvs_str.split(':')[0],
-                    'start': ret.posedit.pos.start.base,
-                    'end': ret.posedit.pos.end.base,
-                    'ref': ret.posedit.edit.ref,
-                    'alt': ret.posedit.edit.alt,
-                    'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}"
-                }
-            elif isinstance(ret.posedit.edit, Dup):
-                return {
-                    'chromosome': hgvs_str.split(':')[0],
-                    'start': ret.posedit.pos.start.base,
-                    'end': ret.posedit.pos.end.base,
-                    'ref': ret.posedit.edit.ref,
-                    'alt': None,
-                    'region': 'TODO'
-                }
-            elif isinstance(ret.posedit.edit, Inv):
-                return {
-                    'chromosome': hgvs_str.split(':')[0],
-                    'start': ret.posedit.pos.start.base,
-                    'end': ret.posedit.pos.end.base,
-                    'ref': None,
-                    'alt': None,
-                    'region': 'TODO'
-                }
+                    'chromosome': chr,
+                    'start': start,
+                    'end': end,
+                    'ref': info.group('ref'),
+                    'alt': info.group('alt'),
+                    'region': f"{chr}:{start}{'-' + end if start != end else ''}/{info.group('alt')}"}
         # In cases we do not find a match we return None
         return None

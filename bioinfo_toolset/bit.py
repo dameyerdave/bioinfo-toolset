@@ -63,7 +63,7 @@ cli.add_command(hgvs)
 
 @click.command()
 @click.option('--GRCh37', '--grch37', '--old', '-o', 'GRCh37', is_flag=True, help="Use the GRCh rest api for the query")
-@click.argument('chromosome', type=int)
+@click.argument('chromosome', type=str)
 @click.argument('start', type=int)
 @click.argument('end', type=int, required=False, default=None)
 def position(chromosome: int, start: int, end: int = None, GRCh37: bool = False):

@@ -79,7 +79,7 @@ class VRS():
 
         return ga4gh_identify(_allele)
 
-    def allele_at_position(self, assembly: str, chromosome: int, start: int, end: int):
+    def allele_at_position(self, assembly: str, chromosome: str, start: int, end: int):
         allele = self.seqrepo.get_sequence(
             identifier=f"{assembly}:{chromosome}", start=start, end=end)
         return allele
