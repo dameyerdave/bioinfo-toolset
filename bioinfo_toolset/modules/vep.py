@@ -18,12 +18,12 @@ def vep(input, species='human', input_type='hgvs', GRCh37=False, refseq=False):
     if refseq:
         params['refseq'] = True
 
-    log.debug(f"Request: {req} {params}")
+    # log.debug(f"Request: {req} {params}")
     resp = requests.get(req, headers={
         'Content-Type': 'application/json'
     }, params=params)
     if resp.ok:
-        log.debug(resp.json())
+        # log.debug(resp.json())
         return resp.json()
     else:
         log.error(f"Response error {resp.status_code}: {resp.content}")

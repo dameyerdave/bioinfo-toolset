@@ -180,11 +180,11 @@ class OfflineVep():
         remove(input_file)
         remove(output_file)
 
-        log.debug(ret)
+        # log.debug(ret)
         return ret
 
     def run(self, command):
-        log.debug(f"Running command: {command}...")
+        # log.debug(f"Running command: {command}...")
 
         def run_container():
             container = self.client.containers.run(
