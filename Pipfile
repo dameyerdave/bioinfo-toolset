@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-liftover = "*"
+liftover = "==1.1.11"
 click = "*"
 friendlylog = "*"
 termcolor = "*"
