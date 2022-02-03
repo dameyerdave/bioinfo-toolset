@@ -93,6 +93,8 @@ class Hgvs:
                         return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
                     elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
                         return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
+        log.warning(
+            f"Cannot get variant from {chromosome}:{position}:{transcript_change}.")
         return None
 
     @classmethod
