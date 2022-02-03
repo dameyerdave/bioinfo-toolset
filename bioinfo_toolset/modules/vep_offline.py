@@ -179,8 +179,8 @@ class OfflineVep():
 
         remove(input_file)
         remove(output_file)
-        # if not isinstance(ret, list):
-        #     ret = [ret]
+
+        log.debug(ret)
         return ret
 
     def run(self, command):
