@@ -31,7 +31,10 @@ def format_change_position(variant):
 
 def transcript_name(transcript):
     if 'amino_acids' in transcript:
-        amino_from, amino_to = transcript['amino_acids'].split('/')
+        if '/' in transcript['amino_acids']:
+            amino_from, amino_to = transcript['amino_acids'].split('/')
+        else:
+            amino_from = transcript['amino_acids']
         position = format_protein_position(transcript)
         return '%s%s%s' % (amino_from, position, amino_to)
     else:
