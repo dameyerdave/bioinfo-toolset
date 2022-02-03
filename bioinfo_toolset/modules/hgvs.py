@@ -45,6 +45,7 @@ RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins))(?P<to_allele>[ACTG]+)',
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<prefix>[^a-z]+)(?P<type>(del|dup|inv))(?P<appendix>.*)'
 ]
+RE_POS_DELIM = r'_|-'
 
 
 class Hgvs:
@@ -62,31 +63,31 @@ class Hgvs:
             if re.match(rex, transcript_change):
                 transcript_change_info = re.search(rex, transcript_change)
                 if '_' in transcript_change_info.group('position'):
-                    start, end = list(map(lambda p: int(p), transcript_change_info.group(
-                        'position').split('_')))
-                    position_part = f"{position}_{position + end - start}"
+                    start, end = list(map(lambda p: int(p), re.split(RE_POS_DELIM, transcript_change_info.group(
+                        'position')))
+                    position_part=f"{position}_{position + end - start}"
                 else:
-                    position_part = position
+                    position_part=position
                 if 'from_allele' in transcript_change_info.re.groupindex:
                     # we found a change nomenclature
-                    reference_allele = cls.vrs.allele_at_position(
+                    reference_allele=cls.vrs.allele_at_position(
                         'GRCh37' if GRCh37 else 'GRCh38', chromosome, position - 1, position - 1 + len(transcript_change_info.group('from_allele')))
-                    complement_allele = complement_allele_lookup(
+                    complement_allele=complement_allele_lookup(
                         reference_allele)
-                    ref = reference_allele
+                    ref=reference_allele
                     if transcript_change_info.group('from_allele') == reference_allele:
-                        alt = transcript_change_info.group(
+                        alt=transcript_change_info.group(
                             'to_allele')
                     # Sanity check it should then be the to_allele
                     elif transcript_change_info.group('from_allele') == complement_allele:
                         # we need to invert the values (because its on the backwards strand)
-                        alt = complement_allele_lookup(transcript_change_info.group(
+                        alt=complement_allele_lookup(transcript_change_info.group(
                             'to_allele'))
                     else:
                         log.warning(
                             f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
-                        ref = transcript_change_info.group('from_allele')
-                        alt = transcript_change_info.group('to_allele')
+                        ref=transcript_change_info.group('from_allele')
+                        alt=transcript_change_info.group('to_allele')
 
                     return cls.parse(f"{chromosome}:g.{position_part}{ref}>{alt}")
                 elif 'type' in transcript_change_info.re.groupindex:
@@ -99,27 +100,25 @@ class Hgvs:
             f"Cannot get variant from {chromosome}:{position}:{transcript_change}.")
         return None
 
-    @classmethod
+    @ classmethod
     def parse_c(cls, hgvs_str):
         """Parses a hgvs c string. A hgvs string at the transcript level."""
         # if re.match(RE_HGVS_C, hgvs_str):
         #     cls.hgvsparser.parse_hgvs_variant()
         raise NotImplementedError()
 
-    @classmethod
+    @ classmethod
     def parse_g(cls, hgvs_str):
         """Same as parse()"""
         return cls.parse(hgvs_str)
 
-    @classmethod
+    @ classmethod
     def parse(cls, hgvs_str):
         """Parses a hgvs g string. A hgvs string at the gene level."""
         if re.match(RE_HGVS_G, hgvs_str):
             try:
-                ret = cls.hgvsparser.parse(
+                ret=cls.hgvsparser.parse(
                     cls.__refseq_g_accession(hgvs_str))
-
-                print(ret)
 
                 if isinstance(ret.posedit.edit, NARefAlt):
                     return {
@@ -150,14 +149,14 @@ class Hgvs:
                     }
             except Exception as ex:
                 log.warning(f"HGVSParser error: {ex}")
-                chr, rest = hgvs_str.split(':')
-                rest = re.sub(r'g\.', '', rest)
-                info = re.search(
+                chr, rest=hgvs_str.split(':')
+                rest=re.sub(r'g\.', '', rest)
+                info=re.search(
                     r'(?P<position>[0-9_]+)(?P<ref>[ACGT]+)>(?P<alt>[ACGT]+)', rest)
                 if '_' in info.group('position'):
-                    start, end = info.group('position').split('_')
+                    start, end=re.split(RE_POS_DELIM, info.group('position'))
                 else:
-                    start = end = info.group('position')
+                    start=end=info.group('position')
                 return {
                     'chromosome': chr,
                     'start': start,
