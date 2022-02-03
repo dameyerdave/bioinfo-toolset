@@ -38,7 +38,7 @@ AC_MAP = {
     'Y': 'NC_000024.9',
 }
 
-RE_HGVS_G = r'([1-9]{1,2}|[XY]{1}):g\.(=|_|con|copy|del|dup|ins|inv|[0-9])'
+RE_HGVS_G = r'([1-9]{1}(?:[0-9]{1})?|[XY]{1}):g\.(=|_|con|copy|del|dup|ins|inv|[0-9])'
 RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)'
 RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
@@ -117,6 +117,8 @@ class Hgvs:
                 ret = cls.hgvsparser.parse(
                     cls.__refseq_g_accession(hgvs_str))
 
+                print(ret)
+
                 if isinstance(ret.posedit.edit, NARefAlt):
                     return {
                         'chromosome': hgvs_str.split(':')[0],
@@ -145,7 +147,7 @@ class Hgvs:
                         'region': 'TODO'
                     }
             except Exception as ex:
-                log.warning(ex)
+                log.warning(f"HGVSParser error: {ex}")
                 chr, rest = hgvs_str.split(':')
                 rest = re.sub(r'g\.', '', rest)
                 info = re.search(
@@ -162,4 +164,5 @@ class Hgvs:
                     'alt': info.group('alt'),
                     'region': f"{chr}:{start}{'-' + end if start != end else ''}/{info.group('alt')}"}
         # In cases we do not find a match we return None
+        log.warning(f"No matching variant found for {hgvs_str}")
         return None
