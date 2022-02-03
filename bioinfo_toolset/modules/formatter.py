@@ -9,7 +9,7 @@ def format_protein_position(transcript):
     if 'protein_start' in transcript and 'protein_end' in transcript:
         return '%s-%s' % (transcript['protein_start'], transcript['protein_end']) if transcript['protein_start'] != transcript['protein_end'] else transcript['protein_start']
     else:
-        return 'N/A'
+        return None
 
 
 def format_position(transcript, prefix):
@@ -19,17 +19,17 @@ def format_position(transcript, prefix):
         else:
             return "%s-%s" % (transcript[prefix+'_start'], transcript[prefix+'_end'])
     else:
-        return 'N/A'
+        return None
 
 
 def format_change_position(variant):
     if 'start' in variant and 'end' in variant:
         return '%s-%s' % (variant['start'], variant['end']) if variant['start'] != variant['end'] else variant['start']
     else:
-        return 'N/A'
+        return None
 
 
-def transcript_name(transcript):
+def transcript_name(transcript, suggestion=None):
     if 'amino_acids' in transcript:
         if '/' in transcript['amino_acids']:
             amino_from, amino_to = transcript['amino_acids'].split('/')
@@ -38,4 +38,4 @@ def transcript_name(transcript):
         position = format_protein_position(transcript)
         return '%s%s%s' % (amino_from, position, amino_to)
     else:
-        return 'N/A'
+        return suggestion
