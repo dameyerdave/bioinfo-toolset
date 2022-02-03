@@ -20,7 +20,7 @@ setuptools.setup(
         'Operating System :: OS Independent'
     ],
     install_requires=[
-        'liftover',
+        'liftover==1.1.11',
         'click',
         'friendlylog',
         'termcolor',
