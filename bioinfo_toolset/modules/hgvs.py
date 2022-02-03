@@ -61,43 +61,46 @@ class Hgvs:
     def from_transcript_change(cls, chromosome: str, position: int, transcript_change: str, GRCh37: bool = False):
         for rex in RE_TRANS_C:
             if re.match(rex, transcript_change):
-                transcript_change_info = re.search(rex, transcript_change)
-                if '_' in transcript_change_info.group('position'):
-                    start, end = list(map(lambda p: int(p), re.split(RE_POS_DELIM, transcript_change_info.group(
-                        'position'))))
-                    position_part = f"{position}_{position + end - start}"
-                else:
-                    position_part = position
-                if 'from_allele' in transcript_change_info.re.groupindex:
-                    # we found a change nomenclature
-                    reference_allele = cls.vrs.allele_at_position(
-                        'GRCh37' if GRCh37 else 'GRCh38', chromosome, position - 1, position - 1 + len(transcript_change_info.group('from_allele')))
-                    complement_allele = complement_allele_lookup(
-                        reference_allele)
-                    ref = reference_allele
-                    if transcript_change_info.group('from_allele') == reference_allele:
-                        alt = transcript_change_info.group(
-                            'to_allele')
-                    # Sanity check it should then be the to_allele
-                    elif transcript_change_info.group('from_allele') == complement_allele:
-                        # we need to invert the values (because its on the backwards strand)
-                        alt = complement_allele_lookup(transcript_change_info.group(
-                            'to_allele'))
+                try:
+                    transcript_change_info = re.search(rex, transcript_change)
+                    if '_' in transcript_change_info.group('position'):
+                        start, end = list(map(lambda p: int(p), re.split(RE_POS_DELIM, transcript_change_info.group(
+                            'position'))))
+                        position_part = f"{position}_{position + end - start}"
                     else:
-                        log.warning(
-                            f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
-                        ref = transcript_change_info.group('from_allele')
-                        alt = transcript_change_info.group('to_allele')
+                        position_part = position
+                    if 'from_allele' in transcript_change_info.re.groupindex:
+                        # we found a change nomenclature
+                        reference_allele = cls.vrs.allele_at_position(
+                            'GRCh37' if GRCh37 else 'GRCh38', chromosome, position - 1, position - 1 + len(transcript_change_info.group('from_allele')))
+                        complement_allele = complement_allele_lookup(
+                            reference_allele)
+                        ref = reference_allele
+                        if transcript_change_info.group('from_allele') == reference_allele:
+                            alt = transcript_change_info.group(
+                                'to_allele')
+                        # Sanity check it should then be the to_allele
+                        elif transcript_change_info.group('from_allele') == complement_allele:
+                            # we need to invert the values (because its on the backwards strand)
+                            alt = complement_allele_lookup(transcript_change_info.group(
+                                'to_allele'))
+                        else:
+                            log.warning(
+                                f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
+                            ref = transcript_change_info.group('from_allele')
+                            alt = transcript_change_info.group('to_allele')
 
-                    return cls.parse(f"{chromosome}:g.{position_part}{ref}>{alt}")
-                elif 'type' in transcript_change_info.re.groupindex:
-                    # we found a insertion, deletion...
-                    if transcript_change_info.group('type') in ['ins', 'delins']:
-                        return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
-                    elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
-                        return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
-        log.warning(
-            f"Cannot get variant from {chromosome}:{position}:{transcript_change}.")
+                        return cls.parse(f"{chromosome}:g.{position_part}{ref}>{alt}")
+                    elif 'type' in transcript_change_info.re.groupindex:
+                        # we found a insertion, deletion...
+                        if transcript_change_info.group('type') in ['ins', 'delins']:
+                            return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
+                        elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
+                            return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
+                except Exception as ex:
+                    log.error(ex)
+        log.error(
+            f"Cannot get variant from {chromosome}:{position}:{transcript_change}: No regex matched.")
         return None
 
     @ classmethod
