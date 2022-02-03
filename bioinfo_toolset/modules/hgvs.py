@@ -43,7 +43,7 @@ RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_alle
 RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins))(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(del|dup|inv))(?P<appendix>.*)'
+    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<prefix>[^a-z]+)(?P<type>(del|dup|inv))(?P<appendix>.*)'
 ]
 
 
