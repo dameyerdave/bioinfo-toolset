@@ -83,8 +83,10 @@ class Hgvs:
                         alt = complement_allele_lookup(transcript_change_info.group(
                             'to_allele'))
                     else:
-                        log.error(
+                        log.warning(
                             f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
+                        ref = transcript_change_info.group('from_allele')
+                        alt = transcript_change_info.group('to_allele')
 
                     return cls.parse(f"{chromosome}:g.{position_part}{ref}>{alt}")
                 elif 'type' in transcript_change_info.re.groupindex:
