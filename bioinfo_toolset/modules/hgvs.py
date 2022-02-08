@@ -130,7 +130,8 @@ class Hgvs:
                         'end': ret.posedit.pos.end.base,
                         'ref': ret.posedit.edit.ref,
                         'alt': ret.posedit.edit.alt,
-                        'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}"
+                        'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}",
+                        'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} . {ret.posedit.edit.ref if ret.posedit.edit.ref else '.'} {ret.posedit.edit.alt if ret.posedit.edit.alt else '<DEL>'} . . {'SVTYPE=DEL;END=' + str(ret.posedit.pos.end.base) if not ret.posedit.edit.alt else '.'} ."
                     }
                 elif isinstance(ret.posedit.edit, Dup):
                     return {

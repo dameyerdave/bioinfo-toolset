@@ -203,9 +203,11 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
     def calculate_vrs(variant):
         from bioinfo_toolset.modules.vrs import VRS
         _vrs = VRS.get_instance()
-        variant['vrs'] = _vrs.identify(
-            sequence_id=f"{variant['assembly_name']}:{variant['seq_region_name']}", allele=variant['allele_string'].split('/')[1], start=variant['start'], end=variant['end'])
-
+        if '/' in variant['allele_string']:
+            variant['vrs'] = _vrs.identify(
+                sequence_id=f"{variant['assembly_name']}:{variant['seq_region_name']}", allele=variant['allele_string'].split('/')[1], start=variant['start'], end=variant['end'])
+        else:
+            variant['vrs'] = variant['allele_string']
         return variant
 
     def enrich_transcript(transcript, species=species, GRCh37=GRCh37):
