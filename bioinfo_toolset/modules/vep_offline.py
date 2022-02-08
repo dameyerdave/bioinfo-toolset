@@ -189,7 +189,7 @@ class OfflineVep():
         def run_container():
             container = self.client.containers.run(
                 IMAGE,
-                name=f"vep_{dt.now().strftime('%Y-%m-%d_%H_%M_%S')}",
+                name=f"vep_{dt.now().strftime('%Y-%m-%d_%H_%M_%S_%f')}",
                 auto_remove=True,
                 remove=True,
                 tty=True,
