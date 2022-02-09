@@ -1,5 +1,4 @@
 import re
-from pprint import pprint
 
 from hgvs.edit import Dup, Inv, NARefAlt
 from hgvs.parser import Parser
@@ -45,7 +44,7 @@ RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins|del|dub|inv))(?P<to_allele>[ACTG]+)',
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<prefix>[^a-z0-9]*)(?P<type>(del|dup|inv))(?P<appendix>.*)'
 ]
-RE_POS_DELIM = r'_|-'
+RE_POS_DELIM = r'_'
 
 
 class Hgvs:
@@ -66,7 +65,6 @@ class Hgvs:
                     if '_' in transcript_change_info.group('position'):
                         start, end = list(map(lambda p: int(p), re.split(RE_POS_DELIM, transcript_change_info.group(
                             'position'))))
-                        print('start, end', start, end)
                         position_part = f"{position}_{position + end - start}"
                     else:
                         position_part = position
@@ -119,14 +117,12 @@ class Hgvs:
     @ classmethod
     def parse(cls, hgvs_str):
         """Parses a hgvs g string. A hgvs string at the gene level."""
-        print('hgvs_str', hgvs_str)
         if re.match(RE_HGVS_G, hgvs_str):
             try:
                 ret = cls.hgvsparser.parse(
                     cls.__refseq_g_accession(hgvs_str))
 
                 if isinstance(ret.posedit.edit, NARefAlt):
-                    print('posedit', ret.posedit.pos)
                     allele = re.sub(r'>', '/', str(ret.posedit.edit).upper())
 
                     return {
