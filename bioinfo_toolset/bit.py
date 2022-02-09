@@ -92,6 +92,7 @@ cli.add_command(position)
 @click.option('--refseq-mode', '-r', 'refsec_mode', is_flag=True, help='Use RefSeq transcript set to report consequences')
 @click.option('--vrs', '-v', 'vrs', is_flag=True, help='Calculates and outputs the VRS identifier per transcript')
 @click.option('--details', '-d', 'details', is_flag=True, help='Outputs all values of variant and transcript got from VEP.')
+# @click.option('--vcf', 'vcf_format', is_flag=True, help='The given vcf string is in vcf format (tab separated).')
 @click.argument('input', type=str)
 def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_transcripts, refsec_mode, vrs, details):
     from bioinfo_toolset.modules.vep import vep

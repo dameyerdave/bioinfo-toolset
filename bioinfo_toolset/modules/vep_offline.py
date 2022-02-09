@@ -134,10 +134,10 @@ class OfflineVep():
         assembly = 'GRCh38' if not GRCh37 else 'GRCh37'
         (_, input_file) = mkstemp(suffix='.vcf', dir=VEP_DATA)
         with open(input_file, 'w') as inf:
-            tab = '\t'
+            sep = '\t'
             for line in input:
                 # print('--line--', f"{re.sub(r'[ ]+', tab, line)}\n")
-                inf.write(f"{re.sub(r'[ ]+', tab, line)}\n")
+                inf.write(f"{re.sub(r'[ ]+', sep, line)}\n")
         (_, output_file) = mkstemp(suffix='.json', dir=VEP_DATA)
         vep_args = {
             'cache': True,
@@ -153,7 +153,7 @@ class OfflineVep():
             'xref_refseq': True,
             'af_gnomad': True,
             'input_file': self.__convert_path(input_file),
-            'format': 'vcf',
+            # This is autodetected: 'format': 'vcf' if vcf_format else 'ensembl',
             'output_file': self.__convert_path(output_file),
             'json': True,
             'force_overwrite': True,
