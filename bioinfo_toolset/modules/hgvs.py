@@ -42,7 +42,7 @@ RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_alle
 RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins|del|dub|inv))(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<prefix>[^a-z0-9]*)(?P<type>(del|dup|inv))(?P<appendix>.*)'
+    r'(?:c\.)?(?P<position>[0-9+-]+(?:_[0-9+-]+)?)(?P<type>(del|dup|inv))(?P<appendix>.*)'
 ]
 RE_POS_DELIM = r'_'
 
@@ -63,7 +63,7 @@ class Hgvs:
                 try:
                     transcript_change_info = re.search(rex, transcript_change)
                     if '_' in transcript_change_info.group('position'):
-                        start, end = list(map(lambda p: int(p), re.split(RE_POS_DELIM, transcript_change_info.group(
+                        start, end = list(map(lambda p: int(eval(p)), re.split(RE_POS_DELIM, transcript_change_info.group(
                             'position'))))
                         position_part = f"{position}_{position + end - start}"
                     else:
