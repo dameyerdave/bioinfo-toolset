@@ -42,8 +42,8 @@ RE_HGVS_G = r'([1-9]{1}(?:[0-9]{1})?|[XY]{1}):g\.(=|_|con|copy|del|dup|ins|inv|[
 RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)'
 RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins))(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<prefix>[^a-z]+)(?P<type>(del|dup|inv))(?P<appendix>.*)'
+    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins|del|dub|inv))(?P<to_allele>[ACTG]+)',
+    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<prefix>[^a-z0-9]*)(?P<type>(del|dup|inv))(?P<appendix>.*)'
 ]
 RE_POS_DELIM = r'_|-'
 
@@ -66,6 +66,7 @@ class Hgvs:
                     if '_' in transcript_change_info.group('position'):
                         start, end = list(map(lambda p: int(p), re.split(RE_POS_DELIM, transcript_change_info.group(
                             'position'))))
+                        print('start, end', start, end)
                         position_part = f"{position}_{position + end - start}"
                     else:
                         position_part = position
@@ -118,12 +119,16 @@ class Hgvs:
     @ classmethod
     def parse(cls, hgvs_str):
         """Parses a hgvs g string. A hgvs string at the gene level."""
+        print('hgvs_str', hgvs_str)
         if re.match(RE_HGVS_G, hgvs_str):
             try:
                 ret = cls.hgvsparser.parse(
                     cls.__refseq_g_accession(hgvs_str))
 
                 if isinstance(ret.posedit.edit, NARefAlt):
+                    print('posedit', ret.posedit.pos)
+                    allele = re.sub(r'>', '/', str(ret.posedit.edit).upper())
+
                     return {
                         'chromosome': hgvs_str.split(':')[0],
                         'start': ret.posedit.pos.start.base,
@@ -131,7 +136,7 @@ class Hgvs:
                         'ref': ret.posedit.edit.ref,
                         'alt': ret.posedit.edit.alt,
                         'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}",
-                        'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} . {ret.posedit.edit.ref if ret.posedit.edit.ref else '.'} {ret.posedit.edit.alt if ret.posedit.edit.alt else '<DEL>'} . . {'SVTYPE=DEL;END=' + str(ret.posedit.pos.end.base) if not ret.posedit.edit.alt else '.'} ."
+                        'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} {ret.posedit.pos.end.base} {allele}"
                     }
                 elif isinstance(ret.posedit.edit, Dup):
                     return {
@@ -140,7 +145,8 @@ class Hgvs:
                         'end': ret.posedit.pos.end.base,
                         'ref': ret.posedit.edit.ref,
                         'alt': None,
-                        'region': 'TODO'
+                        'region': 'TODO',
+                        'vcf': 'DUP'
                     }
                 elif isinstance(ret.posedit.edit, Inv):
                     return {
@@ -149,7 +155,8 @@ class Hgvs:
                         'end': ret.posedit.pos.end.base,
                         'ref': None,
                         'alt': None,
-                        'region': 'TODO'
+                        'region': 'TODO',
+                        'vcf': 'INV'
                     }
             except Exception as ex:
                 log.warning(f"HGVSParser error: {ex}")
@@ -167,7 +174,9 @@ class Hgvs:
                     'end': end,
                     'ref': info.group('ref'),
                     'alt': info.group('alt'),
-                    'region': f"{chr}:{start}{'-' + end if start != end else ''}/{info.group('alt')}"}
+                    'region': f"{chr}:{start}{'-' + end if start != end else ''}/{info.group('alt')}",
+                    'vcf': f"{chr} {start} {end} {info.group('ref')}/{info.group('alt')}"
+                }
         # In cases we do not find a match we return None
         log.warning(f"No matching variant found for {hgvs_str}")
         return None
