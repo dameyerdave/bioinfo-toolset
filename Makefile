@@ -5,3 +5,5 @@ clean:
 deploy: clean
 	@python setup.py sdist bdist_wheel
 	@twine upload dist/*
+test:
+	@python -m unittest

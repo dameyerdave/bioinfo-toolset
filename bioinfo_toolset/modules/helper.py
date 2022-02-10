@@ -30,3 +30,6 @@ def dy(fns, o):
         {o.type._value: {"-": r}})).replace("'-':", "-"))
 
 
+def inverse(_string: str):
+    """invert a string: ex. ACT => TCA"""
+    return _string[::-1]

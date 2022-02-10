@@ -1,4 +1,5 @@
 import re
+import traceback
 
 from hgvs.edit import Dup, Inv, NARefAlt
 from hgvs.parser import Parser
@@ -7,6 +8,8 @@ from bioinfo_toolset.modules.vrs import VRS
 from bioinfo_toolset.modules.lookup import complement_allele_lookup
 
 from friendlylog import colored_logger as log
+
+from bioinfo_toolset.modules.helper import inverse
 
 # maps between chromosomes and refseq chromosome-level accessions
 AC_MAP = {
@@ -41,8 +44,8 @@ RE_HGVS_G = r'([1-9]{1}(?:[0-9]{1})?|[XY]{1}):g\.(=|_|con|copy|del|dup|ins|inv|[
 RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)'
 RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins|del|dub|inv))(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9+-]+(?:_[0-9+-]+)?)(?P<type>(del|dup|inv))(?P<appendix>.*)'
+    r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins|del|dub|inv|>))(?P<to_allele>[ACTG]+)',
+    r'(?:c\.)?(?P<position>[0-9+-]+(?:_[0-9+-]+)?)(?P<type>(del|dup|inv))(?P<num_alleles>.*)'
 ]
 RE_POS_DELIM = r'_'
 
@@ -61,6 +64,7 @@ class Hgvs:
         for rex in RE_TRANS_C:
             if re.match(rex, transcript_change):
                 try:
+                    position = int(position)
                     transcript_change_info = re.search(rex, transcript_change)
                     if '_' in transcript_change_info.group('position'):
                         start, end = list(map(lambda p: int(eval(p)), re.split(RE_POS_DELIM, transcript_change_info.group(
@@ -78,11 +82,17 @@ class Hgvs:
                         if transcript_change_info.group('from_allele') == reference_allele:
                             alt = transcript_change_info.group(
                                 'to_allele')
+                        elif inverse(transcript_change_info.group('from_allele')) == reference_allele:
+                            alt = inverse(transcript_change_info.group(
+                                'to_allele'))
                         # Sanity check it should then be the to_allele
                         elif transcript_change_info.group('from_allele') == complement_allele:
                             # we need to invert the values (because its on the backwards strand)
                             alt = complement_allele_lookup(transcript_change_info.group(
                                 'to_allele'))
+                        elif inverse(transcript_change_info.group('from_allele')) == complement_allele:
+                            alt = inverse(complement_allele_lookup(transcript_change_info.group(
+                                'to_allele')))
                         else:
                             log.warning(
                                 f"Something must be wrong the from allele ({transcript_change_info.group('from_allele')}) does neather correspond to the reference allele ({reference_allele}) not to the complement allele ({complement_allele}): {chromosome}:{position} {transcript_change}")
@@ -96,8 +106,11 @@ class Hgvs:
                             return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
                         elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
                             return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
+                        elif transcript_change_info.group('type') in ['>']:
+                            return cls.parse(f"{chromosome}:g.{position_part}delins{transcript_change_info.group('to_allele')}")
                 except Exception as ex:
                     log.error(ex)
+                    traceback.print_exc()
         log.error(
             f"Cannot get variant from {chromosome}:{position}:{transcript_change}: No regex matched.")
         return None
@@ -122,38 +135,39 @@ class Hgvs:
                 ret = cls.hgvsparser.parse(
                     cls.__refseq_g_accession(hgvs_str))
 
-                if isinstance(ret.posedit.edit, NARefAlt):
-                    allele = re.sub(r'>', '/', str(ret.posedit.edit).upper())
-
-                    return {
-                        'chromosome': hgvs_str.split(':')[0],
-                        'start': ret.posedit.pos.start.base,
-                        'end': ret.posedit.pos.end.base,
-                        'ref': ret.posedit.edit.ref,
-                        'alt': ret.posedit.edit.alt,
-                        'region': f"{hgvs_str.split(':')[0]}:{ret.posedit.pos.start.base}{'-' + str(ret.posedit.pos.end.base) if ret.posedit.pos.start.base != ret.posedit.pos.end.base else ''}/{ret.posedit.edit.alt if ret.posedit.edit.alt else 'DEL'}",
-                        'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} {ret.posedit.pos.end.base} {allele}"
-                    }
-                elif isinstance(ret.posedit.edit, Dup):
-                    return {
-                        'chromosome': hgvs_str.split(':')[0],
-                        'start': ret.posedit.pos.start.base,
-                        'end': ret.posedit.pos.end.base,
-                        'ref': ret.posedit.edit.ref,
-                        'alt': None,
-                        'region': 'TODO',
-                        'vcf': 'DUP'
-                    }
-                elif isinstance(ret.posedit.edit, Inv):
-                    return {
-                        'chromosome': hgvs_str.split(':')[0],
-                        'start': ret.posedit.pos.start.base,
-                        'end': ret.posedit.pos.end.base,
-                        'ref': None,
-                        'alt': None,
-                        'region': 'TODO',
-                        'vcf': 'INV'
-                    }
+                # if isinstance(ret.posedit.edit, NARefAlt):
+                chromosome = hgvs_str.split(':')[0]
+                position = re.sub(r'_', '-', str(ret.posedit.pos))
+                allele = re.sub(r'>', '/', str(ret.posedit.edit).upper())
+                return {
+                    'chromosome': hgvs_str.split(':')[0],
+                    'start': ret.posedit.pos.start.base,
+                    'end': ret.posedit.pos.end.base,
+                    'ref': ret.posedit.edit.ref,
+                    'alt': ret.posedit.edit.alt,
+                    'region': f"{chromosome}:{position}/{ret.posedit.edit.alt if ret.posedit.edit.alt else allele}",
+                    # 'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} {ret.posedit.pos.end.base} {allele}"
+                }
+                # elif isinstance(ret.posedit.edit, Dup):
+                #     return {
+                #         'chromosome': hgvs_str.split(':')[0],
+                #         'start': ret.posedit.pos.start.base,
+                #         'end': ret.posedit.pos.end.base,
+                #         'ref': ret.posedit.edit.ref,
+                #         'alt': None,
+                #         'region': 'TODO',
+                #         # 'vcf': 'DUP'
+                #     }
+                # elif isinstance(ret.posedit.edit, Inv):
+                #     return {
+                #         'chromosome': hgvs_str.split(':')[0],
+                #         'start': ret.posedit.pos.start.base,
+                #         'end': ret.posedit.pos.end.base,
+                #         'ref': None,
+                #         'alt': None,
+                #         'region': 'TODO',
+                #         # 'vcf': 'INV'
+                #     }
             except Exception as ex:
                 log.warning(f"HGVSParser error: {ex}")
                 chr, rest = hgvs_str.split(':')
@@ -171,7 +185,7 @@ class Hgvs:
                     'ref': info.group('ref'),
                     'alt': info.group('alt'),
                     'region': f"{chr}:{start}{'-' + end if start != end else ''}/{info.group('alt')}",
-                    'vcf': f"{chr} {start} {end} {info.group('ref')}/{info.group('alt')}"
+                    # 'vcf': f"{chr} {start} {end} {info.group('ref')}/{info.group('alt')}"
                 }
         # In cases we do not find a match we return None
         log.warning(f"No matching variant found for {hgvs_str}")
