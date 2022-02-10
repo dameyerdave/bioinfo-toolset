@@ -1,3 +1,8 @@
+from bioinfo_toolset.modules.converter import three_to_one
+import re
+from friendlylog import colored_logger as log
+
+
 def format_allele_string(allele_string):
     if '/' in allele_string:
         return "%s > %s" % tuple(allele_string.split('/'))
@@ -36,17 +41,28 @@ variant_allele_lookup = {
 
 
 def transcript_name(transcript, suggestion=None):
-    if 'amino_acids' in transcript:
-        if '/' in transcript['amino_acids']:
-            amino_from, amino_to = transcript['amino_acids'].split('/')
-        else:
-            amino_from = ''
-            if transcript['variant_allele'] in variant_allele_lookup:
-                amino_to = variant_allele_lookup[transcript['variant_allele']]
+    """Returns the transcript name of this transcript in one char nomenclature"""
+    try:
+        # First we try to three_to_one the hgvsp
+        if 'hgvsp' in transcript:
+            return re.sub(r'p\.', '', three_to_one(transcript['hgvsp'].split(':')[1]))
+            # If the hgvsp is not given we try to combine amino accids to
+            # create a name
+        if 'amino_acids' in transcript:
+            if '/' in transcript['amino_acids']:
+                amino_from, amino_to = transcript['amino_acids'].split('/')
             else:
-                # this is only to debug purposes to fill the variant_allele_lookup appropriately
-                amino_to = transcript['variant_allele']
-        position = format_protein_position(transcript, delim='_')
-        return '%s%s%s' % (amino_from, position, amino_to)
-    else:
-        return suggestion
+                amino_from = ''
+                if transcript['variant_allele'] in variant_allele_lookup:
+                    amino_to = variant_allele_lookup[transcript['variant_allele']]
+                else:
+                    # this is only to debug purposes to fill the variant_allele_lookup appropriately
+                    amino_to = transcript['variant_allele']
+            position = format_protein_position(transcript, delim='_')
+            return '%s%s%s' % (amino_from, position, amino_to)
+    except:
+        log.warning(
+            f"Unable to build transcript name for {transcript['hgvsg'] if 'hgvsg' in transcript else transcript['transcript_id']}.")
+
+    # if no name can be found we return the suggestion or None if no suggestion is given
+    return suggestion
