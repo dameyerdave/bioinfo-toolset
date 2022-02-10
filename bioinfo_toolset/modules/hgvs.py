@@ -103,6 +103,8 @@ class Hgvs:
                     elif 'type' in transcript_change_info.re.groupindex:
                         # we found a insertion, deletion...
                         if transcript_change_info.group('type') in ['ins', 'delins']:
+                            # VEP requirement: An insertion (of any size) is indicated by start coordinate = end coordinate + 1
+                            position_part = f"{position + 1}_{position}"
                             return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
                         elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
                             return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
