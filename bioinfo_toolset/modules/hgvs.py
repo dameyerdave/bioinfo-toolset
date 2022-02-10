@@ -145,7 +145,7 @@ class Hgvs:
                     'end': ret.posedit.pos.end.base,
                     'ref': ret.posedit.edit.ref,
                     'alt': ret.posedit.edit.alt,
-                    'region': f"{chromosome}:{position}/{ret.posedit.edit.alt if ret.posedit.edit.alt else allele}",
+                    'region': f"{chromosome}:{ret.posedit.pos.start.base}-{ret.posedit.pos.end.base}/{ret.posedit.edit.alt if ret.posedit.edit.alt else allele}",
                     # 'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} {ret.posedit.pos.end.base} {allele}"
                 }
                 # elif isinstance(ret.posedit.edit, Dup):
@@ -184,7 +184,7 @@ class Hgvs:
                     'end': end,
                     'ref': info.group('ref'),
                     'alt': info.group('alt'),
-                    'region': f"{chr}:{start}{'-' + end if start != end else ''}/{info.group('alt')}",
+                    'region': f"{chr}:{start}-{end}/{info.group('alt')}",
                     # 'vcf': f"{chr} {start} {end} {info.group('ref')}/{info.group('alt')}"
                 }
         # In cases we do not find a match we return None
