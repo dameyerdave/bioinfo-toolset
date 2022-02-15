@@ -7,7 +7,8 @@ class TestFormatter(TestCase):
     def test_transcript_name(self):
         """Test conversion of transcriptnames"""
         transcript_map_chgr37 = {
-            '5:149439278-149439301/GC': 'D698EfsTer22'
+            '5:149439278-149439301/GC': 'D698EfsTer22',
+            '17:7577610-7577610/C': 'splice site 673-2A>G'
         }
 
         for region, expected in transcript_map_chgr37.items():

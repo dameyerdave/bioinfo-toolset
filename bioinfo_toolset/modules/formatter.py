@@ -48,7 +48,8 @@ def transcript_name(transcript, suggestion=None):
             return re.sub(r'p\.', '', three_to_one(transcript['hgvsp'].split(':')[1]))
             # If the hgvsp is not given we try to combine amino accids to
             # create a name
-        if 'amino_acids' in transcript:
+
+        elif 'amino_acids' in transcript:
             if '/' in transcript['amino_acids']:
                 amino_from, amino_to = transcript['amino_acids'].split('/')
             else:
@@ -60,6 +61,10 @@ def transcript_name(transcript, suggestion=None):
                     amino_to = transcript['variant_allele']
             position = format_protein_position(transcript, delim='_')
             return '%s%s%s' % (amino_from, position, amino_to)
+        # Splice site variants
+        elif 'consequence_terms' in transcript and 'hgvsc' in transcript:
+            if 'splice_acceptor_variant' in transcript['consequence_terms']:
+                return "splice site {}".format(re.sub(r'[^:]+:[a-z]\.(.+)$', r'\1', transcript['hgvsc']))
     except:
         log.warning(
             f"Unable to build transcript name for {transcript['hgvsg'] if 'hgvsg' in transcript else transcript['transcript_id']}.")
