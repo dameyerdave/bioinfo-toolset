@@ -41,15 +41,18 @@ variant_allele_lookup = {
 
 
 def transcript_name(transcript, suggestion=None):
-    """Returns the transcript name of this transcript in one char nomenclature"""
+    """
+    Returns the transcript name of this transcript in one char nomenclature, the second boolean
+    return value indicates if the transcript name has been found using VEP (True) or if it's the suggestion
+    that was returned (False).
+    """
     try:
         # First we try to three_to_one the hgvsp
         if 'hgvsp' in transcript:
-            return re.sub(r'p\.', '', three_to_one(transcript['hgvsp'].split(':')[1]))
+            return re.sub(r'p\.', '', three_to_one(transcript['hgvsp'].split(':')[1])), True
+        elif 'amino_acids' in transcript:
             # If the hgvsp is not given we try to combine amino accids to
             # create a name
-
-        elif 'amino_acids' in transcript:
             if '/' in transcript['amino_acids']:
                 amino_from, amino_to = transcript['amino_acids'].split('/')
             else:
@@ -60,14 +63,14 @@ def transcript_name(transcript, suggestion=None):
                     # this is only to debug purposes to fill the variant_allele_lookup appropriately
                     amino_to = transcript['variant_allele']
             position = format_protein_position(transcript, delim='_')
-            return '%s%s%s' % (amino_from, position, amino_to)
-        # Splice site variants
+            return '%s%s%s' % (amino_from, position, amino_to), True
         elif 'consequence_terms' in transcript and 'hgvsc' in transcript:
+            # Splice site variants
             if 'splice_acceptor_variant' in transcript['consequence_terms']:
-                return "splice site {}".format(re.sub(r'[^:]+:[a-z]\.(.+)$', r'\1', transcript['hgvsc']))
+                return "splice site {}".format(re.sub(r'[^:]+:[a-z]\.(.+)$', r'\1', transcript['hgvsc'])), True
     except:
         log.warning(
             f"Unable to build transcript name for {transcript['hgvsg'] if 'hgvsg' in transcript else transcript['transcript_id']}.")
 
     # if no name can be found we return the suggestion or None if no suggestion is given
-    return suggestion
+    return suggestion, False
