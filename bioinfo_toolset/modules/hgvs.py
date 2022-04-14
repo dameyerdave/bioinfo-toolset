@@ -45,7 +45,7 @@ RE_HGVS_C = r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_alle
 RE_TRANS_C = [
     r'(?:c\.)?(?P<position>[^ACTG]+)(?P<from_allele>[ACTG]+)>(?P<to_allele>[ACTG]+)',
     r'(?:c\.)?(?P<position>[0-9]+(?:_[0-9]+)?)(?P<type>(ins|delins|del|dub|inv|>))(?P<to_allele>[ACTG]+)',
-    r'(?:c\.)?(?P<position>[0-9+-]+(?:_[0-9+-]+)?)(?P<type>(del|dup|inv))(?P<num_alleles>.*)'
+    r'(?:c\.)?(?P<position>[0-9+-]+(?:_[0-9+-]+)?)(?P<type>(del|dup|inv))(?P<num_alleles>[0-9]*)'
 ]
 RE_POS_DELIM = r'_'
 
@@ -107,6 +107,15 @@ class Hgvs:
                             position_part = f"{position + 1}_{position}"
                             return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}{transcript_change_info.group('to_allele')}")
                         elif transcript_change_info.group('type') in ['del', 'dup', 'inv']:
+                            if 'to_allele' in transcript_change_info.re.groupindex:
+                                reference_allele = cls.vrs.allele_at_position(
+                                    'GRCh37' if GRCh37 else 'GRCh38', chromosome, position, position + len(transcript_change_info.group('to_allele')))
+                                complement_allele = complement_allele_lookup(inverse(cls.vrs.allele_at_position(
+                                    'GRCh37' if GRCh37 else 'GRCh38', chromosome, position, position + len(transcript_change_info.group('to_allele')))))
+                                if transcript_change_info.group('to_allele') == reference_allele:
+                                    position_part = f"{position + 1}_{position + len(transcript_change_info.group('to_allele'))}"
+                                elif transcript_change_info.group('to_allele') == complement_allele:
+                                    position_part = f"{position + 1}_{position + len(transcript_change_info.group('to_allele'))}"
                             return cls.parse(f"{chromosome}:g.{position_part}{transcript_change_info.group('type')}")
                         elif transcript_change_info.group('type') in ['>']:
                             return cls.parse(f"{chromosome}:g.{position_part}delins{transcript_change_info.group('to_allele')}")

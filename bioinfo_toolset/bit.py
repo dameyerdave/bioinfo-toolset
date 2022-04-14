@@ -199,7 +199,7 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
         output_kv('protein_position', format_protein_position(
             transcript), indent, highlight)
         output_kv('transcript_name', transcript_name(
-            transcript), indent, highlight)
+            transcript)[0], indent, highlight)
 
     def calculate_vrs(variant):
         from bioinfo_toolset.modules.vrs import VRS

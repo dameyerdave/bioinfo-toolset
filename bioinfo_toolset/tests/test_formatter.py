@@ -16,4 +16,4 @@ class TestFormatter(TestCase):
             for transcript in vep_output[0]['transcript_consequences']:
                 # We only check canonical transcripts
                 if transcript.get('canonical'):
-                    self.assertEqual(expected, transcript_name(transcript))
+                    self.assertEqual(expected, transcript_name(transcript)[0])

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from bioinfo_toolset.modules.converter import three_to_one
+from bioinfo_toolset.modules.converter import one_to_three, three_to_one
 
 
 class TestThreeToOne(TestCase):
@@ -12,3 +12,12 @@ class TestThreeToOne(TestCase):
 
         for three, expected in cases.items():
             self.assertEqual(expected, three_to_one(three))
+
+    def test_one_to_three(self):
+        cases = {
+            'p.V600E': 'p.Val600Glu',
+            'p.D698EfsTer22': 'p.Asp698GlufsTer22'
+        }
+
+        for one, expected in cases.items():
+            self.assertEqual(expected, one_to_three(one))
