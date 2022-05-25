@@ -12,7 +12,7 @@ tqdm = "*"
 hgvs = "*"
 docker = "*"
 jsonschema = "<4.0"
-"ga4gh.vrs" = {extras = ["extras"], version = "*"}
+"ga4gh.vrs" = {extras = ["extras"], version = "0.7.6"}
 biopython = "*"
 
 [dev-packages]
