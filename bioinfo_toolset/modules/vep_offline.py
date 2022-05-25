@@ -161,14 +161,35 @@ class OfflineVep():
             'dir_plugins': f"{DATA}/Plugins/",
             'sift': 'b',
             'uniprot': True,
+            'ccds': True,
             'max_af': True,
-            'variant_class': True
+            'variant_class': True,
+            'gene_phenotype': True,
+            'numbers': True,
+            'show_ref_allele': True,
+            'shift_genomic': '1',
+            'shift_3prime': '1',
+            'shift_length': True,
+            'protein': True,
+            'tsl': True,
+            'appris': True,
+            'mane': True,
+            'biotype': True,
+            'domains': True,
+            'af': True,
+            'max_af': True,
+            'af_1kg': True,
+            'af_esp': True,
+            'af_gnomad': True,
+            # 'af_exac': True,
+            'pubmed': True,
+            'var_synonyms': True,
+            'flag_pick': True,
         }
         vep_args.update(kwargs)
         command = './vep '
-        command += ' '.join([f"--{key} {value if value != True else ''}" for key,
+        command += ' '.join([f"--{key} {str(value) if value != True else ''}" for key,
                              value in vep_args.items() if value])
-
         self.run(command)
 
         with open(output_file, 'r') as outf:
