@@ -4,9 +4,14 @@ from friendlylog import colored_logger as log
 
 
 def format_allele_string(allele_string):
-    if '/' in allele_string:
-        return "%s > %s" % tuple(allele_string.split('/'))
-    else:
+    try:
+        if len(allele_string) > 10:
+            return f"{allele_string[:10]}..."
+        elif '/' in allele_string:
+            return "%10s > %s" % tuple(allele_string.split('/'))
+        else:
+            return allele_string
+    except:
         return allele_string
 
 

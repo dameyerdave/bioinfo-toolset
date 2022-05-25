@@ -128,9 +128,18 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
         print(f'%-{indent * 4}s%-{36 if highlight else 32}s : %s' %
               (' ', colored(id, 'cyan', attrs=attrs), colored(value, 'white', attrs=attrs)))
 
+    def format_value(id, value):
+        formatters = {
+            'allele_string': format_allele_string
+        }
+        if id in formatters:
+            return formatters[id](value)
+        else:
+            return value
+
     def output_item(_dict, id, indent=0, highlight=False):
         if id in _dict:
-            output_kv(id, _dict[id], indent, highlight)
+            output_kv(id, format_value(id, _dict[id]), indent, highlight)
 
     def output_splitter(indent=0):
         output('---', indent)
