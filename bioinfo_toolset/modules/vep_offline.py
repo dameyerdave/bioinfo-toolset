@@ -1,5 +1,5 @@
 from pathlib import Path
-from os import makedirs, remove
+from os import makedirs, remove, environ
 from os.path import join, splitext
 from tempfile import mkstemp
 import json
@@ -17,21 +17,21 @@ from shutil import move
 
 import docker
 
-IMAGE = 'ensemblorg/ensembl-vep'
+IMAGE = 'ensemblorg/ensembl-vep:{}'
 VEP_DATA = join(Path.home(), 'vep_data')
 DATA = '/opt/vep/.vep'
 # RELEASE = '106'
 INSTALLED = Path(join(VEP_DATA, '.installed'))
 
 CACHE = {
-    'GRCh37': f"http://ftp.ensembl.org/pub/release-{}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{}_GRCh37.tar.gz",
-    'GRCh38': f"http://ftp.ensembl.org/pub/release-{}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{}_GRCh38.tar.gz",
+    'GRCh37': 'http://ftp.ensembl.org/pub/release-{}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{}_GRCh37.tar.gz',
+    'GRCh38': 'http://ftp.ensembl.org/pub/release-{}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{}_GRCh38.tar.gz',
 }
 
 # The last GRCh37 fasta file is in release 75:
 FASTA = {
     'GRCh37': 'http://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz',
-    'GRCh38': f"http://ftp.ensembl.org/pub/release-{}/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
+    'GRCh38': 'http://ftp.ensembl.org/pub/release-{}/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz'
 }
 
 INDICATORS = ['\\', '|', '/', '|']
@@ -213,7 +213,7 @@ class OfflineVep():
 
         def run_container():
             container = self.client.containers.run(
-                IMAGE,
+                IMAGE.format(environ.get('VEP_RELEASE', 'latest')),
                 name=f"vep_{dt.now().strftime('%Y-%m-%d_%H_%M_%S_%f')}",
                 auto_remove=True,
                 remove=True,
