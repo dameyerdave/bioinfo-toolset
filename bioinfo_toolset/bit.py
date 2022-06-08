@@ -234,14 +234,12 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
     try:
         if input_type == 'vcf':
             offline_vep = OfflineVep()
-            offline_vep.populate_cache()
             results = offline_vep.evaluate(
                 [input],
                 GRCh37=GRCh37
             )
         elif input_type == 'vcf_file':
             offline_vep = OfflineVep()
-            offline_vep.populate_cache()
             lines = []
             with open(input, 'r') as inf:
                 for line in inf.readlines():
@@ -296,6 +294,17 @@ def vep(species, input_type, input, GRCh37, _liftover, enrich_transcripts, all_t
 
 
 cli.add_command(vep)
+
+
+@click.command()
+@click.argument('release', type=str)
+def populate_cache(release):
+    offline_vep = OfflineVep()
+    offline_vep.populate_cache(release)
+
+
+cli.add_command(populate_cache)
+
 
 if __name__ == '__main__':
     cli()

@@ -20,18 +20,18 @@ import docker
 IMAGE = 'ensemblorg/ensembl-vep'
 VEP_DATA = join(Path.home(), 'vep_data')
 DATA = '/opt/vep/.vep'
-RELEASE = '104'
+# RELEASE = '106'
 INSTALLED = Path(join(VEP_DATA, '.installed'))
 
 CACHE = {
-    'GRCh37': f"http://ftp.ensembl.org/pub/release-{RELEASE}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{RELEASE}_GRCh37.tar.gz",
-    'GRCh38': f"http://ftp.ensembl.org/pub/release-{RELEASE}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{RELEASE}_GRCh38.tar.gz",
+    'GRCh37': f"http://ftp.ensembl.org/pub/release-{}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{}_GRCh37.tar.gz",
+    'GRCh38': f"http://ftp.ensembl.org/pub/release-{}/variation/indexed_vep_cache/homo_sapiens_merged_vep_{}_GRCh38.tar.gz",
 }
 
 # The last GRCh37 fasta file is in release 75:
 FASTA = {
     'GRCh37': 'http://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz',
-    'GRCh38': f"http://ftp.ensembl.org/pub/release-{RELEASE}/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
+    'GRCh38': f"http://ftp.ensembl.org/pub/release-{}/fasta/homo_sapiens/dna/Homo_sapiens.GRCh38.dna.primary_assembly.fa.gz"
 }
 
 INDICATORS = ['\\', '|', '/', '|']
@@ -113,14 +113,18 @@ class OfflineVep():
             log.warning(
                 f"File {local_file} already exists, skipping.")
 
-    def populate_cache(self):
+    def populate_cache(self, release):
         if not INSTALLED.is_file():
             log.info('Populating VEP cache...')
             try:
-                self.__rsync_and_extract(CACHE['GRCh37'], force=True)
-                self.__rsync_and_extract(CACHE['GRCh38'], force=True)
-                self.__rsync_and_extract(FASTA['GRCh37'], force=True)
-                self.__rsync_and_extract(FASTA['GRCh38'], force=True)
+                self.__rsync_and_extract(
+                    CACHE['GRCh37'].format(release), force=True)
+                self.__rsync_and_extract(
+                    CACHE['GRCh38'].format(release), force=True)
+                self.__rsync_and_extract(
+                    FASTA['GRCh37'], force=True)
+                self.__rsync_and_extract(
+                    FASTA['GRCh38'].format(release), force=True)
                 INSTALLED.touch()
             except Exception as ex:
                 raise Exception(f"Error populating cache: {ex}")
