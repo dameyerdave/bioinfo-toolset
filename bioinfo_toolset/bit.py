@@ -298,9 +298,10 @@ cli.add_command(vep)
 
 @click.command()
 @click.argument('release', type=str)
-def populate_cache(release):
+@click.option('--force', '-f', 'force', is_flag=True, help='Forces update of cache even if a former cache is already there.')
+def populate_cache(release, force):
     offline_vep = OfflineVep()
-    offline_vep.populate_cache(release)
+    offline_vep.populate_cache(release, force)
 
 
 cli.add_command(populate_cache)

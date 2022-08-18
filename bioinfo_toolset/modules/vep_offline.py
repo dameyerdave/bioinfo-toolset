@@ -20,7 +20,6 @@ import docker
 IMAGE = 'ensemblorg/ensembl-vep:{}'
 VEP_DATA = join(Path.home(), 'vep_data')
 DATA = '/opt/vep/.vep'
-# RELEASE = '106'
 INSTALLED = Path(join(VEP_DATA, '.installed'))
 
 CACHE = {
@@ -113,14 +112,14 @@ class OfflineVep():
             log.warning(
                 f"File {local_file} already exists, skipping.")
 
-    def populate_cache(self, release):
-        if not INSTALLED.is_file():
+    def populate_cache(self, release, force=False):
+        if not INSTALLED.is_file() or force:
             log.info('Populating VEP cache...')
             try:
                 self.__rsync_and_extract(
-                    CACHE['GRCh37'].format(release), force=True)
+                    CACHE['GRCh37'].format(release, release), force=True)
                 self.__rsync_and_extract(
-                    CACHE['GRCh38'].format(release), force=True)
+                    CACHE['GRCh38'].format(release, release), force=True)
                 self.__rsync_and_extract(
                     FASTA['GRCh37'], force=True)
                 self.__rsync_and_extract(
@@ -183,7 +182,7 @@ class OfflineVep():
             'af': True,
             'max_af': True,
             'af_1kg': True,
-            'af_esp': True,
+            # 'af_esp': True,
             'af_gnomad': True,
             # 'af_exac': True,
             'pubmed': True,
