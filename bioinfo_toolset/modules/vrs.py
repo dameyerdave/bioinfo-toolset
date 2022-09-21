@@ -1,16 +1,18 @@
 # pipenv install "jsonschema<4.0" is required
 # from bioinfo_toolset.modules.helper import dj
 import docker
+from os import environ
 from bioutils import sequences
 from bioutils.seqfetcher import fetch_seq
 from ga4gh.core import ga4gh_identify
 from ga4gh.vrs import models
 from ga4gh.vrs.dataproxy import SeqRepoRESTDataProxy
 
-SEQREPO_PORT = 5055
+SEQREPO_PORT = int(environ.get('BIT_SEQREPO_PORT', 5055))
+SEQREPO_HOST = environ.get('BIT_SEQREPO_HOST', 'localhost')
+SEQREPO_DATA = environ.get('BIT_SEQREPO_DATA', '/usr/local/share/seqrepo/')
+SEQREPO_REST_SERVICE_URL = f"http://{SEQREPO_HOST}:{SEQREPO_PORT}/seqrepo"
 SEQREPO_IMAGE = 'biocommons/seqrepo-rest-service'
-SEQREPO_DATA = '/usr/local/share/seqrepo/'
-SEQREPO_REST_SERVICE_URL = f"http://localhost:{SEQREPO_PORT}/seqrepo"
 
 
 class VRS():
@@ -48,7 +50,7 @@ class VRS():
                 detach=True,
                 volumes={SEQREPO_DATA: {
                     'bind': '/usr/local/share/seqrepo/', 'mode': 'ro'}},
-                ports={'5000/tcp': ('127.0.0.1', SEQREPO_PORT)}
+                ports={'5000/tcp': ('0.0.0.0', SEQREPO_PORT)}
             )
         if container is None:
             raise Exception(
