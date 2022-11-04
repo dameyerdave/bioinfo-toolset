@@ -10,9 +10,11 @@ from ga4gh.vrs.dataproxy import SeqRepoRESTDataProxy
 
 SEQREPO_PORT = int(environ.get('BIT_SEQREPO_PORT', 5055))
 SEQREPO_HOST = environ.get('BIT_SEQREPO_HOST', 'localhost')
-SEQREPO_DATA = environ.get('BIT_SEQREPO_DATA', '/usr/local/share/seqrepo/')
+SEQREPO_DATA = environ.get(
+    'BIT_SEQREPO_DATA', '/usr/local/share/seqrepo/latest')
 SEQREPO_REST_SERVICE_URL = f"http://{SEQREPO_HOST}:{SEQREPO_PORT}/seqrepo"
 SEQREPO_IMAGE = 'biocommons/seqrepo-rest-service'
+CONTAINER_NAME = 'seqrepo_rest'
 
 
 class VRS():
@@ -31,7 +33,6 @@ class VRS():
             base_url=SEQREPO_REST_SERVICE_URL)
 
     def start_seqrepo_rest(self):
-        CONTAINER_NAME = 'seqrepo_rest'
         container = None
         try:
             container = self.client.containers.get(CONTAINER_NAME)
@@ -49,8 +50,9 @@ class VRS():
                 stream=False,
                 detach=True,
                 volumes={SEQREPO_DATA: {
-                    'bind': '/usr/local/share/seqrepo/', 'mode': 'ro'}},
-                ports={'5000/tcp': ('0.0.0.0', SEQREPO_PORT)}
+                    'bind': '/usr/local/share/seqrepo', 'mode': 'ro'}},
+                ports={'5000/tcp': ('0.0.0.0', SEQREPO_PORT)},
+                command='seqrepo-rest-service /usr/local/share/seqrepo'
             )
         if container is None:
             raise Exception(
@@ -77,7 +79,7 @@ class VRS():
             # dj(_allele)
         except Exception as ex:
             raise Exception(
-                f"Cannot query local seqrepo server. Check if the container 'seqrepo_local' is running: {ex}")
+                f"Cannot query local seqrepo server. Check if the container '{CONTAINER_NAME}' is running: {ex}")
 
         return ga4gh_identify(_allele)
 
