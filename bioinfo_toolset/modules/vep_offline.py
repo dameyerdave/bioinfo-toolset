@@ -19,6 +19,7 @@ import docker
 
 IMAGE = 'ensemblorg/ensembl-vep:{}'
 VEP_DATA = environ.get('BIT_VEP_DATA', join(Path.home(), 'vep_data'))
+REAL_VEP_DATA = environ.get('BIT_REAL_VEP_DATA', VEP_DATA)
 DATA = '/opt/vep/.vep'
 INSTALLED = Path(join(VEP_DATA, '.installed'))
 
@@ -221,7 +222,7 @@ class OfflineVep():
                 stderr=True,
                 stream=True,
                 detach=True,
-                volumes={VEP_DATA: {'bind': DATA, 'mode': 'rw'}},
+                volumes={REAL_VEP_DATA: {'bind': DATA, 'mode': 'rw'}},
                 command=command
             )
             for output in container.logs(stdout=True, stderr=True,
