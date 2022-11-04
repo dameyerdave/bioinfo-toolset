@@ -8,6 +8,9 @@ from ga4gh.core import ga4gh_identify
 from ga4gh.vrs import models
 from ga4gh.vrs.dataproxy import SeqRepoRESTDataProxy
 
+# Use 'docker run --rm biocommons/seqrepo seqrepo pull'
+# to update seqrepo to the latest version.
+# do not forget to link latest to the latest directory.
 SEQREPO_PORT = int(environ.get('BIT_SEQREPO_PORT', 5055))
 SEQREPO_HOST = environ.get('BIT_SEQREPO_HOST', 'localhost')
 SEQREPO_DATA = environ.get(
