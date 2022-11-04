@@ -18,7 +18,7 @@ from shutil import move
 import docker
 
 IMAGE = 'ensemblorg/ensembl-vep:{}'
-VEP_DATA = join(Path.home(), 'vep_data')
+VEP_DATA = environ('BIT_VEP_DATA', join(Path.home(), 'vep_data'))
 DATA = '/opt/vep/.vep'
 INSTALLED = Path(join(VEP_DATA, '.installed'))
 
