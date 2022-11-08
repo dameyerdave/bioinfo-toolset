@@ -151,13 +151,13 @@ class Hgvs:
                 position = re.sub(r'_', '-', str(ret.posedit.pos))
                 allele = re.sub(r'>', '/', str(ret.posedit.edit).upper())
                 return {
-                    'chromosome': hgvs_str.split(':')[0],
+                    'chromosome': chromosome,
                     'start': ret.posedit.pos.start.base,
                     'end': ret.posedit.pos.end.base,
                     'ref': ret.posedit.edit.ref,
                     'alt': ret.posedit.edit.alt,
                     'region': f"{chromosome}:{ret.posedit.pos.start.base}-{ret.posedit.pos.end.base}/{ret.posedit.edit.alt if ret.posedit.edit.alt else allele}",
-                    # 'vcf': f"{hgvs_str.split(':')[0]} {ret.posedit.pos.start.base} {ret.posedit.pos.end.base} {allele}"
+                    'identifier': f"{chromosome}_{ret.posedit.pos.start.base}_{ret.posedit.pos.end.base}{'_' + ret.posedit.edit.ref if ret.posedit.edit.ref else ''}_{'-/' + ret.posedit.edit.alt if ret.posedit.pos.start.base > ret.posedit.pos.end.base else ret.posedit.edit.alt if ret.posedit.edit.alt else allele}"
                 }
                 # elif isinstance(ret.posedit.edit, Dup):
                 #     return {
@@ -196,6 +196,7 @@ class Hgvs:
                     'ref': info.group('ref'),
                     'alt': info.group('alt'),
                     'region': f"{chr}:{start}-{end}/{info.group('alt')}",
+                    'identifier': f"{chr}_{start}_{end}_{info.group('ref')}_{info.group('alt')}"
                     # 'vcf': f"{chr} {start} {end} {info.group('ref')}/{info.group('alt')}"
                 }
         # In cases we do not find a match we return None
